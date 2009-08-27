@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ogre-lib3ds", "ogre-lib3ds\ogre-lib3ds.vcproj", "{539BC08C-A421-4A38-B894-4D9CA85DA2B8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{539BC08C-A421-4A38-B894-4D9CA85DA2B8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{539BC08C-A421-4A38-B894-4D9CA85DA2B8}.Debug|Win32.Build.0 = Debug|Win32
+		{539BC08C-A421-4A38-B894-4D9CA85DA2B8}.Release|Win32.ActiveCfg = Release|Win32
+		{539BC08C-A421-4A38-B894-4D9CA85DA2B8}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
