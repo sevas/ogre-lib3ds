@@ -1,0 +1,12 @@
+material Gray
+{
+    technique
+    {
+        pass
+        {
+            lightning off
+            ambient 0.5 0.5 0.5
+            diffuse 0.5 0.5 0.5
+        }
+    }
+}

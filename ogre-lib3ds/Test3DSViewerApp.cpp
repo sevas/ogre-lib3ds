@@ -205,9 +205,7 @@ void Test3DSViewerApp::_build3dsModel()
                 
             }
             
-            mObjectBuilder->normal(normals[i][0], normals[i][1], normals[i][2]);
-            
-
+            mObjectBuilder->normal(normals[i][0], normals[i][2], normals[i][1]);
         }
         for(int i=0 ; i<mesh->nfaces ; i++)
         {
