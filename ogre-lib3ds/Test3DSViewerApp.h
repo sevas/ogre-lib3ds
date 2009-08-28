@@ -32,4 +32,9 @@ protected:
     Lib3dsIo m3dsIo;
 
     ManualObject *mObjectBuilder;
+
+    BillboardSet *mBBset;
+    Billboard *mLightFlare;
+    Light *mLight;
+    SceneNode *mLightNode;
 };

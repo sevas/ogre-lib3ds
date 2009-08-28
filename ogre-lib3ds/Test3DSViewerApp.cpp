@@ -80,6 +80,20 @@ void Test3DSViewerApp::createScene()
     mCamera->lookAt(Vector3::ZERO);
 
     _build3dsModel();
+
+
+    mBBset = mSceneMgr->createBillboardSet("Light BB");
+    mBBset->setMaterialName("Objects/Flare");
+    mLightFlare = mBBset->createBillboard(Vector3::ZERO);
+
+    mLight = mSceneMgr->createLight("main light");
+    mLight->setType(Light::LT_POINT);
+    mLight->setDiffuseColour(ColourValue::White);
+    mLight->setSpecularColour(ColourValue::White);
+
+    mLightNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("light node");
+    mLightNode->attachObject(mLight);
+    mLightNode->attachObject(mBBset);
 }
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_createGrid(int _units)
@@ -154,7 +168,8 @@ void Test3DSViewerApp::_build3dsModel()
 {
     int result;
     //mFile = fopen("cube.3ds", "rb");
-    mFile = fopen("Modern-home-interior1.3DS", "rb");
+    //mFile = fopen("../media/3ds/Modern-home-interior1.3DS", "rb");
+    mFile = fopen("../media/3ds/indochine.3DS", "rb");
 
     m3dsFile = lib3ds_file_new();
 
@@ -170,11 +185,17 @@ void Test3DSViewerApp::_build3dsModel()
 
     mObjectBuilder = mSceneMgr->createManualObject("3ds cube");
 
+
+    
     for(int j=0 ; j<m3dsFile->nmeshes ; ++j)
     {
         Lib3dsMesh *mesh = m3dsFile->meshes[j];
-        
-        mObjectBuilder->begin("", RenderOperation::OT_TRIANGLE_LIST);
+    
+        float (*normals)[3] = (float(*)[3])malloc(sizeof(float) * 9 * mesh->nfaces);
+        lib3ds_mesh_calculate_vertex_normals(mesh, normals);
+
+
+        mObjectBuilder->begin("Gray", RenderOperation::OT_TRIANGLE_LIST);
         float p[3], t[2];
         for (int i = 0; i < mesh->nvertices; ++i) {
             lib3ds_vector_copy(p, mesh->vertices[i]);
@@ -183,6 +204,9 @@ void Test3DSViewerApp::_build3dsModel()
                 mObjectBuilder->textureCoord(mesh->texcos[i][0], mesh->texcos[i][1]);
                 
             }
+            
+            mObjectBuilder->normal(normals[i][0], normals[i][1], normals[i][2]);
+            
 
         }
         for(int i=0 ; i<mesh->nfaces ; i++)
