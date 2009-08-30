@@ -4,7 +4,8 @@ material Gray
     {
         pass
         {
-            lightning off
+            lightning on
+			shading flat
             ambient 0.5 0.5 0.5
             diffuse 0.5 0.5 0.5
         }

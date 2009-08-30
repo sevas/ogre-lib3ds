@@ -1,6 +1,10 @@
 #include "precompiled.h"
 #include "Test3DSViewerApp.h"
 
+#include <string>
+#include <sstream>
+#include <boost/format.hpp>
+
 
 static int  log_level = LIB3DS_LOG_INFO;
 
@@ -94,6 +98,8 @@ void Test3DSViewerApp::createScene()
     mLightNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("light node");
     mLightNode->attachObject(mLight);
     mLightNode->attachObject(mBBset);
+    mLightNode->setPosition(-400, 100, 200);
+    
 }
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_createGrid(int _units)
@@ -166,6 +172,7 @@ void Test3DSViewerApp::_createGrid(int _units)
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_build3dsModel()
 {
+    SceneNode *modelNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("3ds model");
     int result;
     //mFile = fopen("cube.3ds", "rb");
     //mFile = fopen("../media/3ds/Modern-home-interior1.3DS", "rb");
@@ -199,13 +206,14 @@ void Test3DSViewerApp::_build3dsModel()
         float p[3], t[2];
         for (int i = 0; i < mesh->nvertices; ++i) {
             lib3ds_vector_copy(p, mesh->vertices[i]);
-            mObjectBuilder->position(p[0], p[1], p[2]);
+            mObjectBuilder->position(p[1], p[2], p[0]);
             if (mesh->texcos) {
                 mObjectBuilder->textureCoord(mesh->texcos[i][0], mesh->texcos[i][1]);
                 
             }
-            
-            mObjectBuilder->normal(normals[i][0], normals[i][2], normals[i][1]);
+            Vector3 n(normals[i][0], normals[i][2], normals[i][1]);
+            n.normalise();
+            mObjectBuilder->normal(n);
         }
         for(int i=0 ; i<mesh->nfaces ; i++)
         {
@@ -216,7 +224,46 @@ void Test3DSViewerApp::_build3dsModel()
 
         mObjectBuilder->end();
     }
+   /* MeshPtr ogreMesh = mObjectBuilder->convertToMesh("indochine.3ds");
+    ogreMesh->buildEdgeList();
+    
+    Entity *ent = mSceneMgr->createEntity("indo", "indochine.3ds");*/
 
-    mSceneMgr->getRootSceneNode()->attachObject(mObjectBuilder);
+    modelNode->attachObject(mObjectBuilder);
+
+
+
+    /*Log *log = LogManager::getSingleton().createLog("3dsdump.log");
+
+    Lib3dsNode *first = m3dsFile->nodes;
+    _dumpNode(log, first, 0, "");*/
+
+
     fclose(mFile);
+}
+
+void Test3DSViewerApp::_dumpNode(Log *_log, Lib3dsNode *_node
+                                , int _level, std::string _basename)
+{
+    boost::format fmt("%s [mesh : %s]");
+    std::stringstream s;
+
+    Lib3dsNode *p = _node;
+    for(; p ; p=p->next)
+    {
+        if (p->type == LIB3DS_NODE_MESH_INSTANCE) 
+        {
+            std::string fullName = _basename + "/" + std::string(p->name);
+
+            Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(m3dsFile, p);
+            if(mesh)
+                fmt % fullName % mesh->name;
+            
+            else
+                fmt % fullName % "N/A";
+
+            _log->logMessage(fmt.str());
+            _dumpNode(_log, p->childs, _level+1, fullName);
+        }
+    }
 }

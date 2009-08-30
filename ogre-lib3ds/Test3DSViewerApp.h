@@ -26,6 +26,8 @@ public:
     void _createGrid(int);
     void _build3dsModel();
 
+    void _dumpNode(Log*, Lib3dsNode*, int, std::string);
+
 protected:
     FILE *mFile;
     Lib3dsFile *m3dsFile;
@@ -37,4 +39,6 @@ protected:
     Billboard *mLightFlare;
     Light *mLight;
     SceneNode *mLightNode;
+
+    std::map<std::string, Entity*> mMeshes;
 };
