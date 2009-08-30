@@ -4,8 +4,9 @@ material Gray
     {
         pass
         {
+			//cull_hardware none
             lightning on
-			shading flat
+			shading phong
             ambient 0.5 0.5 0.5
             diffuse 0.5 0.5 0.5
         }

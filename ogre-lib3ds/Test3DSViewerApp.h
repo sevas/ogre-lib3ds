@@ -25,6 +25,11 @@ public:
     void createScene();
     void _createGrid(int);
     void _build3dsModel();
+    void _buildSubtree(Lib3dsNode*, const std::string&
+                      ,SceneNode*);
+    MeshPtr _convert3dsMeshToOgreMesh(Lib3dsMesh*
+                                     ,Lib3dsMeshInstanceNode*
+                                     ,const std::string&);
 
     void _dumpNode(Log*, Lib3dsNode*, int, std::string);
 
@@ -40,5 +45,9 @@ protected:
     Light *mLight;
     SceneNode *mLightNode;
 
-    std::map<std::string, Entity*> mMeshes;
+    std::map<std::string, MeshPtr> mMeshes;
+    std::list<MeshPtr> mMeshVect;
+
+    Log *m3dsBuildLog;
+    int mDummyCnt, mNodeCnt;
 };
