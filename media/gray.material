@@ -6,7 +6,7 @@ material Gray
         {
 			//cull_hardware none
             lightning on
-			shading phong
+			shading gouraud
             ambient 0.5 0.5 0.5
             diffuse 0.5 0.5 0.5
         }

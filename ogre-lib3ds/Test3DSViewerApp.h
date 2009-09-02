@@ -7,10 +7,8 @@
 #include <Ogre.h>
 #include "ExampleApplication.h"
 
-extern "C"{
-#include "lib3ds.h"
-};
-
+#include <lib3ds.h>
+    
 
 using namespace Ogre;
 
@@ -33,6 +31,10 @@ public:
 
     void _dumpNode(Log*, Lib3dsNode*, int, std::string);
 
+    void _createMeshesFrom3dsFile(Lib3dsFile*);
+    void _buildSceneFromNode(Lib3dsNode*, SceneNode*
+                            ,const std::string&);
+
 protected:
     FILE *mFile;
     Lib3dsFile *m3dsFile;
@@ -50,4 +52,7 @@ protected:
 
     Log *m3dsBuildLog;
     int mDummyCnt, mNodeCnt;
+
+    std::map<std::string, MeshPtr> mCenteredMeshes;
+
 };
