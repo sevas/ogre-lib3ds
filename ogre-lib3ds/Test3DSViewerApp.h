@@ -4,10 +4,15 @@
 #include <cstdio>
 #include <cstring>
 
+#include <boost/shared_ptr.hpp>
+#include <lib3ds.h>
 #include <Ogre.h>
+
+
+#include "MovableText.h"
 #include "ExampleApplication.h"
 
-#include <lib3ds.h>
+
     
 
 using namespace Ogre;
@@ -33,7 +38,8 @@ public:
 
     void _createMeshesFrom3dsFile(Lib3dsFile*);
     void _buildSceneFromNode(Lib3dsNode*, SceneNode*
-                            ,const std::string&);
+                            ,const std::string&
+                            ,int);
 
 protected:
     FILE *mFile;
@@ -53,6 +59,8 @@ protected:
     Log *m3dsBuildLog;
     int mDummyCnt, mNodeCnt;
 
+    typedef boost::shared_ptr<MovableText> MovableTextPtr;
     std::map<std::string, MeshPtr> mCenteredMeshes;
+    std::map<std::string, MovableTextPtr> mNodeLabels;
 
 };

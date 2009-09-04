@@ -179,6 +179,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\MovableText.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ogre-lib3ds.cpp"
 				>
 			</File>
@@ -206,6 +210,10 @@
 				RelativePath=".\Test3DSViewerApp.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\TextRenderer.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -225,11 +233,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MovableText.h"
+				>
+			</File>
+			<File
 				RelativePath=".\precompiled.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Test3DSViewerApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TextRenderer.h"
 				>
 			</File>
 		</Filter>
