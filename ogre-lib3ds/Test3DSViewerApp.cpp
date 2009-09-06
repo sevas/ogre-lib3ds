@@ -139,7 +139,7 @@ void Test3DSViewerApp::_build3dsModel()
     //_buildSubtree( m3dsFile->nodes, "/", modelNode);
 
     modelNode->scale(0.1, 0.1, 0.1);
-    modelNode->pitch(Degree(-90));
+    //modelNode->pitch(Degree(-90));
 
     lib3ds_file_free(m3dsFile);
  
@@ -181,7 +181,6 @@ void Test3DSViewerApp::_buildSubtree(Lib3dsNode *_node
     Lib3dsNode *p;
     for(p = _node ; p ; p=p->next)
     {
-        
         if (p->type == LIB3DS_NODE_MESH_INSTANCE) 
         {
             mNodeCnt++;
@@ -476,22 +475,20 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
 
 
 
-            //newNode->translate(n->pos[0], n->pos[1], n->pos[2]);
+            newNode->translate(n->pos[0], n->pos[1], n->pos[2]);
             newNode->scale(n->scl[0], n->scl[1], n->scl[2]);
             newNode->rotate(Quaternion(n->rot[3], n->rot[0], n->rot[1], n->rot[2]));
-            
-           
-            //newNode->translate(-n->pivot[0], -n->pivot[1], -n->pivot[2]);
+            newNode->translate(-n->pivot[0], -n->pivot[1], -n->pivot[2]);
 
             //newNode->setVisible((bool)n->hide);
 
-
+			m3dsBuildLog->logMessage("");
             // log node xforms
             m3dsBuildLog->logMessage(spaces.str() + "    pivot : "
                                                   + StringConverter::toString(Vector3(-n->pivot[0]
                                                                                      ,-n->pivot[1]
-                                                                                     , -n->pivot[2])));
-
+                                                                                     ,-n->pivot[2])));
+			m3dsBuildLog->logMessage("");
             m3dsBuildLog->logMessage(spaces.str() + "    mesh instance transform : ");
             Vector3 pos, scl;
             Quaternion rot;
@@ -509,9 +506,16 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
                 matrixLineFmt   % M[i][0] % M[i][1] % M[i][2] % M[i][3];
                 m3dsBuildLog->logMessage(matrixLineFmt.str());
             }
+			m3dsBuildLog->logMessage("");
+			m3dsBuildLog->logMessage(spaces.str() + "    scale : "
+									 	+ StringConverter::toString(scl));
+			m3dsBuildLog->logMessage(spaces.str() + "    position : "
+											+ StringConverter::toString(pos));
 
+			m3dsBuildLog->logMessage(spaces.str() + "    rotation : "
+											+ StringConverter::toString(rot));
 
-            
+            m3dsBuildLog->logMessage("");
             Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(m3dsFile, (Lib3dsNode*)n);
             if (mesh && mesh->name)
             {
@@ -530,6 +534,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
                 }
 
 
+
                 MeshPtr meshToAdd = mCenteredMeshes[meshName];
                 if(! meshToAdd.isNull())
                 {
@@ -539,7 +544,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
                 }
             }
 
-            m3dsBuildLog->logMessage("\n\n");
+            m3dsBuildLog->logMessage("\n\n\n");
 
             _buildSceneFromNode(p->childs, newNode, fullName, _level+1);
         }
