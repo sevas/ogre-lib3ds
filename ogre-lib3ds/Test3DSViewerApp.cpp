@@ -124,8 +124,8 @@ void Test3DSViewerApp::_build3dsModel()
     //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath2.3DS");
-    m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_pillars.3DS");
+    m3dsFile =  lib3ds_file_open("../media/3ds/amphimath2.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_pillars.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/test_pivot2.3DS");
     if (!m3dsFile->nodes)
@@ -139,7 +139,7 @@ void Test3DSViewerApp::_build3dsModel()
     //_buildSubtree( m3dsFile->nodes, "/", modelNode);
 
     modelNode->scale(0.1, 0.1, 0.1);
-    //modelNode->pitch(Degree(-90));
+    modelNode->pitch(Degree(-90));
 
     lib3ds_file_free(m3dsFile);
  
@@ -429,7 +429,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
 
         m3dsBuildLog->logMessage(fmt.str());
         
-        m3dsBuildLog->logMessage(spaces.str() + "    matrix[4][4] : ");
+        m3dsBuildLog->logMessage(spaces.str() + "    node->base.matrix : ");
         for(int i=0 ; i<4 ; ++i)
         {
             std::stringstream matrixLine;
@@ -454,42 +454,35 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
 
             newNode = _parentNode->createChildSceneNode(fullName + " Node");
                  
-            SceneNode *nodeCenter = newNode->createChildSceneNode(fullName + " NodeCenter");
-            Entity *nodeSphere = mSceneMgr->createEntity(fullName + "sphere", "axes.mesh");
-            //nodeSphere->setMaterialName("Gray");
-            nodeCenter->attachObject(nodeSphere);
-            float scale = 20.0 / nodeSphere->getBoundingBox().getSize().x;
-            nodeCenter->setScale(scale, scale, scale);
+            //SceneNode *nodeCenter = newNode->createChildSceneNode(fullName + " NodeCenter");
+            //Entity *nodeSphere = mSceneMgr->createEntity(fullName + "sphere", "axes.mesh");
+            ////nodeSphere->setMaterialName("Gray");
+            //nodeCenter->attachObject(nodeSphere);
+            //float scale = 20.0 / nodeSphere->getBoundingBox().getSize().x;
+            //nodeCenter->setScale(scale, scale, scale);
 
-            MovableTextPtr nodeLabel(new MovableText(fullName, std::string(p->name)));
-            nodeLabel->setTextAlignment(MovableText::H_CENTER, MovableText::V_BELOW);
-            nodeLabel->setCharacterHeight(7);
-            nodeLabel->setVisible(true);
-            nodeLabel->showOnTop(true);
-            
-            //nodeLabel = newObject.ObjectNode->createChildSceneNode(name+"labelnode", Vector3(0, 120, 0));
-            nodeCenter->attachObject(&(*nodeLabel));
-            mNodeLabels[fullName] = nodeLabel;
+            //if(!StringUtil::match( std::string(p->name), ""))
+            //{
+            //    MovableTextPtr nodeLabel(new MovableText(fullName, std::string(p->name)));
+            //    nodeLabel->setTextAlignment(MovableText::H_CENTER, MovableText::V_BELOW);
+            //    nodeLabel->setCharacterHeight(7);
+            //    nodeLabel->setVisible(true);
+            //    nodeLabel->showOnTop(true);
+            //    
+            //    //nodeLabel = newObject.ObjectNode->createChildSceneNode(name+"labelnode", Vector3(0, 120, 0));
+            //    nodeCenter->attachObject(&(*nodeLabel));
+            //    mNodeLabels[fullName] = nodeLabel;
+            //}
 
 
-
-
-
-            newNode->translate(n->pos[0], n->pos[1], n->pos[2]);
-            newNode->scale(n->scl[0], n->scl[1], n->scl[2]);
-            newNode->rotate(Quaternion(n->rot[3], n->rot[0], n->rot[1], n->rot[2]));
-            newNode->translate(-n->pivot[0], -n->pivot[1], -n->pivot[2]);
-
-            //newNode->setVisible((bool)n->hide);
-
-			m3dsBuildLog->logMessage("");
+            m3dsBuildLog->logMessage("");
             // log node xforms
-            m3dsBuildLog->logMessage(spaces.str() + "    pivot : "
-                                                  + StringConverter::toString(Vector3(-n->pivot[0]
-                                                                                     ,-n->pivot[1]
-                                                                                     ,-n->pivot[2])));
-			m3dsBuildLog->logMessage("");
-            m3dsBuildLog->logMessage(spaces.str() + "    mesh instance transform : ");
+            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pivot : "
+                + StringConverter::toString(Vector3(-n->pivot[0]
+            ,-n->pivot[1]
+            ,-n->pivot[2])));
+            m3dsBuildLog->logMessage("");
+            m3dsBuildLog->logMessage(spaces.str() + "    mesh instance xform (pos*scl*rot) : ");
             Vector3 pos, scl;
             Quaternion rot;
             scl = Vector3(n->scl[0], n->scl[1], n->scl[2]);
@@ -506,14 +499,29 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
                 matrixLineFmt   % M[i][0] % M[i][1] % M[i][2] % M[i][3];
                 m3dsBuildLog->logMessage(matrixLineFmt.str());
             }
-			m3dsBuildLog->logMessage("");
-			m3dsBuildLog->logMessage(spaces.str() + "    scale : "
-									 	+ StringConverter::toString(scl));
-			m3dsBuildLog->logMessage(spaces.str() + "    position : "
-											+ StringConverter::toString(pos));
+            m3dsBuildLog->logMessage("");
+            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->scl : "
+                + StringConverter::toString(scl));
+            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pos : "
+                + StringConverter::toString(pos));
 
-			m3dsBuildLog->logMessage(spaces.str() + "    rotation : "
-											+ StringConverter::toString(rot));
+            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->rot : "
+                + StringConverter::toString(rot));
+
+            
+            
+
+            newNode->rotate(Quaternion(n->rot[3], n->rot[0], n->rot[1], n->rot[2]));
+            newNode->scale(n->scl[0], n->scl[1], n->scl[2]);
+            newNode->translate(n->pos[0] + (M[0][0]*(-n->pivot[0])) + (M[0][1]*(-n->pivot[1])) + (M[0][2]*(-n->pivot[2]))
+                             , n->pos[1] + (M[1][0]*(-n->pivot[0])) + (M[1][1]*(-n->pivot[1])) + (M[1][2]*(-n->pivot[2]))
+                             , n->pos[2] + (M[2][0]*(-n->pivot[0])) + (M[2][1]*(-n->pivot[1])) + (M[2][2]*(-n->pivot[2])));
+            
+            //newNode->translate(-n->pivot[0], -n->pivot[1], -n->pivot[2]);
+
+            //newNode->setVisible((bool)n->hide);
+
+
 
             m3dsBuildLog->logMessage("");
             Lib3dsMesh *mesh = lib3ds_file_mesh_for_node(m3dsFile, (Lib3dsNode*)n);
@@ -522,7 +530,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode, SceneNode *_par
                 std::string meshName = mesh->name;
 
                 // log mesh xforms
-                m3dsBuildLog->logMessage(spaces.str() + "    mesh matrix : ");
+                m3dsBuildLog->logMessage(spaces.str() + "    mesh->matrix : ");
                 for(int i=0 ; i<4 ; ++i)
                 {
                     std::stringstream matrixLine;
