@@ -24,8 +24,9 @@ public:
     Test3DSViewerApp(void);
     ~Test3DSViewerApp(void);
     
-
     void createScene();
+    
+protected:
     void _createGrid(int);
     void _build3dsModel();
     void _buildSubtree(Lib3dsNode*, const std::string&
@@ -42,7 +43,7 @@ public:
                             ,int);
 
 protected:
-    FILE *mFile;
+    FILE *mFile;    
     Lib3dsFile *m3dsFile;
     Lib3dsIo m3dsIo;
 
