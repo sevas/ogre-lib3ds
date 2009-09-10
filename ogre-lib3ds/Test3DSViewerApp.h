@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 #include <lib3ds.h>
@@ -40,7 +41,12 @@ protected:
     void _createMeshesFrom3dsFile(Lib3dsFile*);
     void _buildSceneFromNode(Lib3dsNode*, SceneNode*
                             ,const std::string&
-                            ,int);
+                            ,int
+                            ,bool);
+
+    void _logXformMatrix(const Matrix4&
+                        ,const std::stringstream&
+                        ,const std::string &);
 
 protected:
     FILE *mFile;    

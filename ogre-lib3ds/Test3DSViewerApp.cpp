@@ -134,12 +134,12 @@ void Test3DSViewerApp::_build3dsModel()
     lib3ds_file_eval(m3dsFile, 0);
 
     _createMeshesFrom3dsFile(m3dsFile);
-    _buildSceneFromNode(m3dsFile->nodes, modelNode, "/", 0);
+    _buildSceneFromNode(m3dsFile->nodes, modelNode, "/", 0, false);
 
     //_buildSubtree( m3dsFile->nodes, "/", modelNode);
 
     //modelNode->scale(0.1, 0.1, 0.1);
-    //modelNode->pitch(Degree(-90));
+    modelNode->pitch(Degree(-90));
 
     lib3ds_file_free(m3dsFile);
  
@@ -404,7 +404,8 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
 void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                                            ,SceneNode *_parentNode
                                            ,const std::string &_basename
-                                           ,int _level)
+                                           ,int _level
+                                           ,bool _show)
 {
     boost::format fullNameFmt("%s/%06d%s");
     Lib3dsNode *p;
@@ -435,16 +436,14 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
         m3dsBuildLog->logMessage(fmt.str());    
         
-        m3dsBuildLog->logMessage(spaces.str() + "    node->base.matrix : ");
+        
+        Matrix4 baseMatrix;
         for(int i=0 ; i<4 ; ++i)
-        {
-            std::stringstream matrixLine;
-            boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
-            matrixLineFmt % spaces.str() % "    ";
-            matrixLineFmt   % p->matrix[0][i] % p->matrix[1][i]
-                            % p->matrix[2][i] % p->matrix[3][i];
-            m3dsBuildLog->logMessage(matrixLineFmt.str());
-        }
+            for(int j=0 ; j<4 ; ++j)
+                baseMatrix[i][j] = p->matrix[j][i];
+        _logXformMatrix(baseMatrix, spaces, "node->base.matrix : ");
+    
+
 
         
 
@@ -456,117 +455,130 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
             Lib3dsMeshInstanceNode *n = (Lib3dsMeshInstanceNode*) p;
 
-            //m3dsBuildLog->logMessage(boost::str(boost::format("building new node (%d) : %s") % mNodeCnt % fullName));
 
-            newNode = _parentNode->createChildSceneNode(fullName + " Node");
-                 
-
-            if(StringUtil::match(std::string(p->name), "Box210") || 
-               StringUtil::startsWith(std::string(p->name), "Loft*"))
-            {
-                SceneNode *nodeCenter = newNode->createChildSceneNode(fullName + " NodeCenter");
-                Entity *nodeSphere = mSceneMgr->createEntity(fullName + "sphere", "axes.mesh");
-                nodeCenter->attachObject(nodeSphere);
-                float scale = 20.0 / nodeSphere->getBoundingBox().getSize().x;
-                nodeCenter->setScale(scale, scale, scale);
-
-                if(!StringUtil::match( std::string(p->name), ""))
-                {
-                    MovableTextPtr nodeLabel(new MovableText(fullName, std::string(p->name)));
-                    nodeLabel->setTextAlignment(MovableText::H_CENTER, MovableText::V_BELOW);
-                    nodeLabel->setCharacterHeight(7);
-                    nodeLabel->setVisible(true);
-                    nodeLabel->showOnTop(true);
-                    //nodeLabel = newObject.ObjectNode->createChildSceneNode(name+"labelnode", Vector3(0, 120, 0));
-                    nodeCenter->attachObject(&(*nodeLabel));
-                    mNodeLabels[fullName] = nodeLabel;
-                }
-            }
-
-
-            m3dsBuildLog->logMessage("");
-            // log node xforms
-            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pivot : "
-                + StringConverter::toString(Vector3(-n->pivot[0]
-                                                    ,-n->pivot[1]
-                                                    ,-n->pivot[2])));
-            m3dsBuildLog->logMessage("");
-            m3dsBuildLog->logMessage(spaces.str() + "    mesh instance xform (pos*scl*rot) : ");
             Vector3 pos, scl;
             Quaternion rot;
             scl = Vector3(n->scl[0], n->scl[1], n->scl[2]);
             pos = Vector3(n->pos[0], n->pos[1], n->pos[2]);
             rot = Quaternion(n->rot[3], n->rot[0], n->rot[1], n->rot[2]);
 
-            
-            Matrix4 M;
-            M.makeTransform(pos, scl, rot);
-            for(int i=0 ; i<4 ; ++i)
+            if(!_show)
             {
-                std::stringstream matrixLine;
-                boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
-                matrixLineFmt % spaces.str() % "    ";
-                matrixLineFmt   % M[i][0] % M[i][1] % M[i][2] % M[i][3];
-                m3dsBuildLog->logMessage(matrixLineFmt.str());
+                _show = (scl.x < 0 || scl.y < 0 || scl.z < 0 );            
             }
-            m3dsBuildLog->logMessage("");
-            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->scl : "
-                + StringConverter::toString(scl));
-            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->rot : "
-                + StringConverter::toString(rot));
-            m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pos : "
-                + StringConverter::toString(pos));
-            
-            
 
-            //newNode->rotate(Quaternion(n->rot[3], n->rot[0], n->rot[1], n->rot[2]));
-            //newNode->scale(n->scl[0], n->scl[1], n->scl[2]);
-            ///*newNode->translate(n->pos[0] + (M[0][0]*(-n->pivot[0])) + (M[0][1]*(-n->pivot[1])) + (M[0][2]*(-n->pivot[2]))
-            //                 , n->pos[1] + (M[1][0]*(-n->pivot[0])) + (M[1][1]*(-n->pivot[1])) + (M[1][2]*(-n->pivot[2]))
-            //                 , n->pos[2] + (M[2][0]*(-n->pivot[0])) + (M[2][1]*(-n->pivot[1])) + (M[2][2]*(-n->pivot[2])));*/
 
-            //newNode->translate(n->pos[0], n->pos[1], n->pos[2]);
-            if(scl[0]<0)
-            {
-                rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::NEGATIVE_UNIT_Y);
-                scl[0] = -scl[0];
-            }
-            if(scl[1]<0)
-            {
-                rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_X);
-                scl[1] = -scl[1];
-            }
-            if(scl[2]<0)
-            {
-                rot = rot *Quaternion(Radian(Math::PI / 2), Vector3::UNIT_Z);
-                scl[2] = -scl[2];
-            }
-            newNode->scale(scl);
-            newNode->rotate(rot);
-            newNode->translate(pos);
+            newNode = _parentNode->createChildSceneNode(fullName + " Node");
+                 
+            //{
+            //    /*SceneNode *nodeCenter = newNode->createChildSceneNode(fullName + " NodeCenter");
+            //    Entity *nodeSphere = mSceneMgr->createEntity(fullName + "sphere", "axes.mesh");
+            //    nodeCenter->attachObject(nodeSphere);
+            //    float scale = 20.0 / nodeSphere->getBoundingBox().getSize().x;
+            //    nodeCenter->setScale(scale, scale, scale);*/
+
+            //    //if(_show && !StringUtil::match( std::string(p->name), ""))
+            //    //{
+            //    //    MovableTextPtr nodeLabel(new MovableText(fullName, std::string(p->name)));
+            //    //    nodeLabel->setTextAlignment(MovableText::H_CENTER, MovableText::V_BELOW);
+            //    //    nodeLabel->setCharacterHeight(7);
+            //    //    nodeLabel->setVisible(true);
+            //    //    nodeLabel->showOnTop(true);
+            //    //    //nodeLabel = newObject.ObjectNode->createChildSceneNode(name+"labelnode", Vector3(0, 120, 0));
+            //    //    nodeCenter->attachObject(&(*nodeLabel));
+            //    //    mNodeLabels[fullName] = nodeLabel;
+            //    //}
+            //}
+
+
+     
             
-
-            newNode = newNode->createChildSceneNode(fullName+"pivot node", Vector3(-n->pivot[0], -n->pivot[1], -n->pivot[2]));
-            
-            newNode->setVisible(!(bool)n->hide);
-
+            //if(scl[0]<0)
+            //{
+            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_Y);
+            //    scl[0] = -scl[0];
+            //}
+            //if(scl[1]<0)
+            //{
+            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_Z);
+            //    scl[1] = -scl[1];
+            //}
+            //if(scl[2]<0)
+            //{
+            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_X);
+            //    scl[2] = -scl[2];
+            //}
 
             {
                 Matrix4 nodeMatrix = newNode->_getFullTransform();
+                _logXformMatrix(nodeMatrix, spaces, "SceneNode before xform");
+            
+                Matrix4 localXform(Matrix4::IDENTITY);
+                localXform.makeTransform(pos, scl, rot);
+                _logXformMatrix(localXform, spaces, "mesh instance xform (scl*rot*pos)");
+                
+                Matrix4 finalXform = nodeMatrix * localXform;
+                
+                _logXformMatrix(finalXform, spaces, "expected result xform ("
+                                                    +StringConverter::toString(finalXform == baseMatrix)
+                                                    +")");
+                
+            }
 
+            newNode->scale(scl);
+
+            {
+                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->scl : "
+                    + StringConverter::toString(scl));
+
+                Matrix4 xform(Matrix4::IDENTITY);
+                xform.setScale(scl);
+                _logXformMatrix(xform, spaces, "mesh instance scale");
+
+                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                _logXformMatrix(nodeMatrix, spaces, "SceneNode after scale : ");
                 m3dsBuildLog->logMessage("");
-                m3dsBuildLog->logMessage(spaces.str() + "    SceneNode full xform : ");
+            }
 
-                Matrix4 M;
-                M.makeTransform(pos, scl, rot);
-                for(int i=0 ; i<4 ; ++i)
-                {
-                    std::stringstream matrixLine;
-                    boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
-                    matrixLineFmt % spaces.str() % "    ";
-                    matrixLineFmt   % nodeMatrix[i][0] % nodeMatrix[i][1] % nodeMatrix[i][2] % nodeMatrix[i][3];
-                    m3dsBuildLog->logMessage(matrixLineFmt.str());
-                }
+            newNode->rotate(rot);
+
+            {
+                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->rot : "
+                                                      + StringConverter::toString(rot));
+
+                Matrix4 xform(rot);
+                _logXformMatrix(xform, spaces, "mesh instance rotation");
+                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                _logXformMatrix(nodeMatrix, spaces, "SceneNode after scale & rotate : ");
+                m3dsBuildLog->logMessage("");
+            }
+
+            newNode->translate(pos);
+            
+            {
+                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pos : "
+                                                      + StringConverter::toString(pos));
+
+                Matrix4 xform(Matrix4::IDENTITY);
+                xform.makeTrans(pos);
+                _logXformMatrix(xform, spaces, "mesh instance translation");
+
+                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                _logXformMatrix(nodeMatrix, spaces, "SceneNode after translate");
+                m3dsBuildLog->logMessage("");
+            }
+
+            newNode = newNode->createChildSceneNode(fullName+"pivot node", Vector3(-n->pivot[0], -n->pivot[1], -n->pivot[2]));
+            newNode->setVisible(!(bool)n->hide);
+            {
+                // log node xforms
+                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pivot : "
+                    + StringConverter::toString(Vector3(-n->pivot[0]
+                                                        ,-n->pivot[1]
+                                                        ,-n->pivot[2])));
+                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                _logXformMatrix(nodeMatrix, spaces, "SceneNode after pivot");
+                m3dsBuildLog->logMessage("");
             }
 
 
@@ -575,34 +587,46 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
             if (mesh && mesh->name)
             {
                 std::string meshName = mesh->name;
+                Matrix4 meshMatrix;
 
-                // log mesh xforms
-                m3dsBuildLog->logMessage(spaces.str() + "    mesh->matrix : ");
                 for(int i=0 ; i<4 ; ++i)
-                {
-                    std::stringstream matrixLine;
-                    boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
-                    matrixLineFmt % spaces.str() % "    ";
-                    matrixLineFmt   % mesh->matrix[0][i] % mesh->matrix[1][i]
-                                    % mesh->matrix[2][i] % mesh->matrix[3][i];
-                    m3dsBuildLog->logMessage(matrixLineFmt.str());
-                }
-
-
+                    for(int j=0 ; j<4 ; ++j)
+                        meshMatrix[i][j] = mesh->matrix[j][i];
+                
+                _logXformMatrix(meshMatrix, spaces, "mesh matrix : ");
 
                 MeshPtr meshToAdd = mCenteredMeshes[meshName];
                 if(! meshToAdd.isNull())
                 {
-                    //m3dsBuildLog->logMessage(boost::str(boost::format("attaching %s to node %s")% mCenteredMeshes[meshName]->getName() % fullName));
-                    Entity *ent = mSceneMgr->createEntity(fullName+" Ent", mCenteredMeshes[meshName]->getName());
-                    newNode->attachObject(ent);
+                    if(_show)
+                    {
+
+                        Entity *ent = mSceneMgr->createEntity(fullName+" Ent", mCenteredMeshes[meshName]->getName());
+                        newNode->attachObject(ent);
+                    }
                 }
             }
 
             m3dsBuildLog->logMessage("\n\n\n");
 
-            _buildSceneFromNode(p->childs, newNode, fullName, _level+1);
+            _buildSceneFromNode(p->childs, newNode, fullName, _level+1, _show);
         }
     }
 }
 //------------------------------------------------------------------------------
+void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
+                                      ,const std::stringstream &_spaces
+                                      ,const std::string &_title)
+{
+    m3dsBuildLog->logMessage("");
+    m3dsBuildLog->logMessage(_spaces.str() + "    "+_title);
+
+    for(int i=0 ; i<4 ; ++i)
+    {
+        boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
+        matrixLineFmt % _spaces.str() % "    ";
+        matrixLineFmt % _matrix[i][0] % _matrix[i][1] % _matrix[i][2] % _matrix[i][3];
+        m3dsBuildLog->logMessage(matrixLineFmt.str());
+    }
+    m3dsBuildLog->logMessage("");
+}
