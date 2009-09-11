@@ -28,7 +28,8 @@ void Test3DSViewerApp::createScene()
     mCamera->setPosition(100, 100, 100);
     mCamera->lookAt(Vector3::ZERO);
 
-    _build3dsModel();
+    //_build3dsModel();
+    _buildRadiator();
 
 
     mBBset = mSceneMgr->createBillboardSet("Light BB");
@@ -519,9 +520,9 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 
                 Matrix4 finalXform = nodeMatrix * localXform;
                 
-                _logXformMatrix(finalXform, spaces, "expected result xform ("
-                                                    +StringConverter::toString(finalXform == baseMatrix)
-                                                    +")");
+                //_logXformMatrix(finalXform, spaces, "expected result xform ("
+                //                                    +StringConverter::toString(finalXform == baseMatrix)
+                //                                    +")");
                 
             }
 
@@ -596,6 +597,14 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 _logXformMatrix(meshMatrix, spaces, "mesh matrix : ");
 
                 MeshPtr meshToAdd = mCenteredMeshes[meshName];
+                
+                if (meshName == "Box210" ||meshName == "Loft394")
+                {
+
+                    MeshSerializer serializer;
+                    serializer.exportMesh(&(*meshToAdd), meshName+".mesh");
+                }
+
                 if(! meshToAdd.isNull())
                 {
                     if(_show)
@@ -629,4 +638,74 @@ void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
         m3dsBuildLog->logMessage(matrixLineFmt.str());
     }
     m3dsBuildLog->logMessage("");
+}
+//------------------------------------------------------------------------------
+void Test3DSViewerApp::_buildRadiator()
+{
+    mSceneMgr->setFlipCullingOnNegativeScale(false);
+
+    SceneNode *baseNode, *box210Node, *loft394Node;
+    Entity *box210Ent, *loft394Ent;
+
+    Vector3 baseScl, basePos, basePivot;
+    Vector3 box210Scl, box210Pos, box210Pivot;
+    Vector3 loft394Scl, loft394Pos, loft394Pivot;
+    Quaternion baseRot, box210Rot, loft394Rot;
+
+
+    baseNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("base node");
+    box210Node = baseNode->createChildSceneNode("Box210 node");
+    loft394Node = baseNode->createChildSceneNode("Loft394 node");
+
+    box210Ent = mSceneMgr->createEntity("Box210", "Box210.mesh");
+    loft394Ent = mSceneMgr->createEntity("Loft394", "Loft394.mesh");
+
+    box210Node->attachObject(box210Ent);
+    loft394Node->attachObject(loft394Ent);
+
+
+    box210Scl = Vector3(1, 1, 1);
+    box210Rot = Quaternion(0.5, 0.5, -0.5, -0.5);
+    box210Pos = Vector3(107.256, 1.29345, 17.5695);
+    
+    box210Node->scale(box210Scl);
+    box210Node->rotate(box210Rot);
+    box210Node->translate(box210Pos);
+
+
+
+    loft394Scl = Vector3(1, 1.44587, 0.891658);
+    loft394Rot = Quaternion( 0.707107, 0.707107, -0, -0);
+    loft394Pos = Vector3(-0.83252, 1.06597, 9.29529);
+
+    loft394Node->scale(loft394Scl);
+    loft394Node->rotate(loft394Rot);
+    loft394Node->translate(loft394Pos);
+
+
+
+    baseScl = Vector3(-1, -0.75888, 0.75888);
+    baseRot = Quaternion( -0.139173, -0, -0, -0.990268);
+    //basePos = Vector3(-1062.25, -1199.29, -775.482);
+    basePos = Vector3(0, 0, 0);
+
+    baseNode->scale(baseScl);
+    baseNode->rotate(baseRot);
+    baseNode->translate(basePos);
+
+    Matrix4 boxMatrix, loftMatrix, baseMatrix;
+    
+    boxMatrix = box210Node->_getFullTransform();
+    loftMatrix = loft394Node->_getFullTransform();
+    baseMatrix = baseNode->_getFullTransform();
+
+    Matrix4 baseMatrix2, loftMatrix2, boxMatrix2, M;
+
+    baseMatrix2.makeTransform(basePos, baseScl, baseRot);
+    M = Matrix4::IDENTITY;
+    M.makeTransform(loft394Pos, loft394Scl, loft394Rot);
+    loftMatrix2 = baseMatrix2 * M;
+    M = Matrix4::IDENTITY;
+    M.makeTransform(box210Pos, box210Scl, box210Rot);
+    boxMatrix2 = baseMatrix2 * M;
 }

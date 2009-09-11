@@ -29,6 +29,9 @@ public:
     
 protected:
     void _createGrid(int);
+
+    void _buildRadiator();
+
     void _build3dsModel();
     void _buildSubtree(Lib3dsNode*, const std::string&
                       ,SceneNode*);
