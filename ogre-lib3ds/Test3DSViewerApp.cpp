@@ -10,8 +10,9 @@ static int  log_level = LIB3DS_LOG_INFO;
 
 
 Test3DSViewerApp::Test3DSViewerApp(void)
-:mDummyCnt(0)
-,mNodeCnt(0)
+    :OgreApplication("3DS loader")
+    ,mDummyCnt(0)
+    ,mNodeCnt(0)
 {
 }
 
@@ -24,97 +25,16 @@ void Test3DSViewerApp::createScene()
     m3dsBuildLog = LogManager::getSingleton().createLog("3dsbuild.log");
 
     mSceneMgr->setNormaliseNormalsOnScale(true);
-    _createGrid(500);
-    mCamera->setPosition(100, 100, 100);
-    mCamera->lookAt(Vector3::ZERO);
+    _createGrid(1000);
+    _createLight();
+    /*mCamera->setPosition(100, 100, 100);
+    mCamera->lookAt(Vector3::ZERO);*/
 
-    //_build3dsModel();
-    _buildRadiator();
+    _build3dsModel();
+    //_buildRadiator();
 
 
-    mBBset = mSceneMgr->createBillboardSet("Light BB");
-    mBBset->setMaterialName("Objects/Flare");
-    mLightFlare = mBBset->createBillboard(Vector3::ZERO);
-
-    mLight = mSceneMgr->createLight("main light");
-    mLight->setType(Light::LT_POINT);
-    mLight->setDiffuseColour(ColourValue::White);
-    mLight->setSpecularColour(ColourValue::White);
-
-    mLightNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("light node");
-    mLightNode->attachObject(mLight);
-    mLightNode->attachObject(mBBset);
-    mLightNode->setPosition(-300, 100, -200);
-    //mLightNode->setPosition(0, 100, 0);
     
-}
-//------------------------------------------------------------------------------
-void Test3DSViewerApp::_createGrid(int _units)
-{
-    SceneNode *gridNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("WorldGrid Node");
-    ManualObject *axes = mSceneMgr->createManualObject("AXES");
-
-
-    axes->begin("WorldGrid/Axes", RenderOperation::OT_LINE_LIST);
-    // X axis
-    axes->position(-_units, 0.0, 0.0);     
-    axes->colour(0.1, 0.0, 0.0);
-
-    axes->position( _units, 0.0, 0.0);     
-    axes->colour(1.0, 0.0, 0.0);
-
-    // Y Axis
-    axes->position(0.0, -_units, 0.0);     
-    axes->colour(0.0, 0.1, 0.0);
-
-    axes->position(0.0,  _units, 0.0);     
-    axes->colour(0.0, 1.0, 0.0);
-
-    // Z axis
-    axes->position( 0.0, 0.0, -_units);     
-    axes->colour(0.0, 0.0, 0.1);
-
-    axes->position( 0.0, 0.0,  _units);  
-    axes->colour(0.0, 0.0, 1.0);
-
-    axes->end();
-    gridNode->attachObject(axes);
-    axes->setQueryFlags(0x00);
-
-    ManualObject *grid = mSceneMgr->createManualObject("Grid Lines");
-
-    grid->begin("WorldGrid/Lines", RenderOperation::OT_LINE_LIST);
-    float c;
-    for (int i = 10; i<=_units ; i+=10)
-    {
-        c = (i%100) ? 0.3 : 0.5;
-
-        grid->position(-_units, 0, i);
-        grid->colour(c, c, c);
-        grid->position( _units, 0, i);
-        grid->colour(c, c, c);
-
-        grid->position(-_units, 0, -i);
-        grid->colour(c, c, c);
-        grid->position( _units, 0, -i);
-        grid->colour(c, c, c);
-
-
-        grid->position(i, 0, -_units);
-        grid->colour(c, c, c);
-        grid->position(i, 0,  _units);
-        grid->colour(c, c, c);
-
-        grid->position(-i, 0, -_units);
-        grid->colour(c, c, c);
-        grid->position(-i, 0,  _units);
-        grid->colour(c, c, c);
-    }
-
-
-    grid->end();
-    grid->setQueryFlags(0x00);
-    gridNode->attachObject(grid);
 }
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_build3dsModel()
@@ -122,10 +42,12 @@ void Test3DSViewerApp::_build3dsModel()
     SceneNode *modelNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("3ds model");
  
     //m3dsFile =  lib3ds_file_open("../media/3ds/test3.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
+    m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
-    m3dsFile =  lib3ds_file_open("../media/3ds/amphimath2.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/Kengresshus-visuelle.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/chienvert.3DS");
@@ -134,12 +56,17 @@ void Test3DSViewerApp::_build3dsModel()
 
     lib3ds_file_eval(m3dsFile, 0);
 
+    mAABB = Ogre::AxisAlignedBox::BOX_NULL;
+
     _createMeshesFrom3dsFile(m3dsFile);
     _buildSceneFromNode(m3dsFile->nodes, modelNode, "/", 0, false);
 
     //_buildSubtree( m3dsFile->nodes, "/", modelNode);
 
-    //modelNode->scale(0.1, 0.1, 0.1);
+
+    Real width = mAABB.getSize()[0];
+    Real scale = 1000.0/width;
+    modelNode->scale(scale, scale, scale);
     modelNode->pitch(Degree(-90));
 
     lib3ds_file_free(m3dsFile);
@@ -343,7 +270,7 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
         // create an ogre object for easy OgreMesh conversion
         // Gray = default material
         // TODO: better default material
-        newObject->begin("Gray", RenderOperation::OT_TRIANGLE_LIST);
+        newObject->begin("3DS/Gray", RenderOperation::OT_TRIANGLE_LIST);
 
         int idx = 0;
         // foreach tri
@@ -569,7 +496,10 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 m3dsBuildLog->logMessage("");
             }
 
-            newNode = newNode->createChildSceneNode(fullName+"pivot node", Vector3(-n->pivot[0], -n->pivot[1], -n->pivot[2]));
+            newNode = newNode->createChildSceneNode(fullName+"pivot node"
+                                                    , Vector3(-n->pivot[0]
+                                                            , -n->pivot[1]
+                                                            , -n->pivot[2]));
             newNode->setVisible(!(bool)n->hide);
             {
                 // log node xforms
@@ -597,26 +527,35 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 _logXformMatrix(meshMatrix, spaces, "mesh matrix : ");
 
                 MeshPtr meshToAdd = mCenteredMeshes[meshName];
-                
-                if (meshName == "Box210" ||meshName == "Loft394")
-                {
-
-                    MeshSerializer serializer;
-                    serializer.exportMesh(&(*meshToAdd), meshName+".mesh");
-                }
 
                 if(! meshToAdd.isNull())
                 {
-                    if(_show)
+                    if(1)//_show)
                     {
 
-                        Entity *ent = mSceneMgr->createEntity(fullName+" Ent", mCenteredMeshes[meshName]->getName());
+                        Entity *ent = mSceneMgr->createEntity(fullName+" Ent"
+                                                            , mCenteredMeshes[meshName]->getName());
                         newNode->attachObject(ent);
+
+                        {
+                            Ogre::Vector3 pos = ent->getParentSceneNode()->_getDerivedPosition();
+                            Ogre::Vector3 scale = ent->getParentSceneNode()->_getDerivedScale();
+                            Ogre::Quaternion rotation = ent->getParentSceneNode()->_getDerivedOrientation();
+
+                            const Ogre::Vector3 * corners = ent->getBoundingBox().getAllCorners();
+
+                            for (int i=0 ; i<8 ; i++)
+                            {
+                                mAABB.merge(pos + rotation * corners[i] * scale);
+                            }
+                        }
                     }
                 }
             }
 
             m3dsBuildLog->logMessage("\n\n\n");
+            
+            
 
             _buildSceneFromNode(p->childs, newNode, fullName, _level+1, _show);
         }
@@ -689,9 +628,10 @@ void Test3DSViewerApp::_buildRadiator()
     //basePos = Vector3(-1062.25, -1199.29, -775.482);
     basePos = Vector3(0, 0, 0);
 
-    baseNode->scale(baseScl);
+    //baseNode->scale(baseScl);
     baseNode->rotate(baseRot);
-    baseNode->translate(basePos);
+    //baseNode->translate(basePos);
+
 
     Matrix4 boxMatrix, loftMatrix, baseMatrix;
     

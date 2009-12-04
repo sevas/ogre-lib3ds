@@ -11,7 +11,7 @@
 
 
 #include "MovableText.h"
-#include "ExampleApplication.h"
+#include "OgreApplication.h"
 
 
     
@@ -19,7 +19,7 @@
 using namespace Ogre;
 
 class Test3DSViewerApp :
-    public ExampleApplication
+    public OgreApplication
 {
 public:
     Test3DSViewerApp(void);
@@ -28,7 +28,7 @@ public:
     void createScene();
     
 protected:
-    void _createGrid(int);
+    //void _createGrid(int);
 
     void _buildRadiator();
 
@@ -58,11 +58,6 @@ protected:
 
     ManualObject *mObjectBuilder;
 
-    BillboardSet *mBBset;
-    Billboard *mLightFlare;
-    Light *mLight;
-    SceneNode *mLightNode;
-
     std::map<std::string, MeshPtr> mMeshes;
     std::list<MeshPtr> mMeshVect;
 
@@ -73,4 +68,5 @@ protected:
     std::map<std::string, MeshPtr> mCenteredMeshes;
     std::map<std::string, MovableTextPtr> mNodeLabels;
 
+    Ogre::AxisAlignedBox mAABB;
 };
