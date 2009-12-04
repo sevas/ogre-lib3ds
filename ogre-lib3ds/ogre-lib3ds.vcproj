@@ -225,18 +225,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ExampleApplication.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ExampleFrameListener.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ExampleLoadingBar.h"
-				>
-			</File>
-			<File
 				RelativePath=".\MovableText.h"
 				>
 			</File>

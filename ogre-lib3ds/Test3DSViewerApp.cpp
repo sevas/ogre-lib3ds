@@ -27,14 +27,10 @@ void Test3DSViewerApp::createScene()
     mSceneMgr->setNormaliseNormalsOnScale(true);
     _createGrid(1000);
     _createLight();
-    /*mCamera->setPosition(100, 100, 100);
-    mCamera->lookAt(Vector3::ZERO);*/
+
 
     _build3dsModel();
-    //_buildRadiator();
-
-
-    
+    //_buildRadiator(); 
 }
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_build3dsModel()
@@ -42,10 +38,10 @@ void Test3DSViewerApp::_build3dsModel()
     SceneNode *modelNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("3ds model");
  
     //m3dsFile =  lib3ds_file_open("../media/3ds/test3.3DS");
-    m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
+    m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Kengresshus-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
@@ -64,10 +60,19 @@ void Test3DSViewerApp::_build3dsModel()
     //_buildSubtree( m3dsFile->nodes, "/", modelNode);
 
 
+
+
     Real width = mAABB.getSize()[0];
     Real scale = 1000.0/width;
     modelNode->scale(scale, scale, scale);
     modelNode->pitch(Degree(-90));
+
+    StaticGeometry *geom = mSceneMgr->createStaticGeometry("fucking shit");
+    geom->addSceneNode(modelNode);
+    geom->build();
+    geom->setVisible(true);
+    modelNode->setVisible(false);
+
 
     lib3ds_file_free(m3dsFile);
  
@@ -134,10 +139,24 @@ void Test3DSViewerApp::_buildSubtree(Lib3dsNode *_node
                     mMeshVect.push_back(newMesh);
                     mMeshes[newMesh->getName()] = newMesh;
 
-                    m3dsBuildLog->logMessage(boost::str(boost::format("attaching %s to node %s")% newMesh->getName() % fullName));
+                    m3dsBuildLog->logMessage(boost::str(boost::format("attaching %s to node %s")
+                                                            % newMesh->getName() % fullName));
                     Entity *ent = mSceneMgr->createEntity(fullName+" Ent", newMesh->getName());
 
                     newNode->attachObject(ent);
+
+                    {
+                        Ogre::Vector3 pos = ent->getParentSceneNode()->_getDerivedPosition();
+                        Ogre::Vector3 scale = ent->getParentSceneNode()->_getDerivedScale();
+                        Ogre::Quaternion rotation = ent->getParentSceneNode()->_getDerivedOrientation();
+
+                        const Ogre::Vector3 * corners = ent->getBoundingBox().getAllCorners();
+
+                        for (int i=0 ; i<8 ; i++)
+                        {
+                            mAABB.merge(pos + rotation * corners[i] * scale);
+                        }
+                    }
                 }
             }
             _buildSubtree(p->childs, fullName, newNode);
@@ -167,7 +186,7 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
     memcpy(orig_vertices, mesh->vertices, sizeof(float) * 3 * mesh->nvertices);
     
     // create translated ogre manualobject
-    //{
+
         float inv_matrix[4][4], M[4][4];
         float tmp[3];
         //int i;
@@ -186,7 +205,7 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
         lib3ds_mesh_calculate_vertex_normals(mesh, normals);
         
         // copy everything to vertex buffers
-        newObject->begin("Gray", RenderOperation::OT_TRIANGLE_LIST);
+        newObject->begin("3DS/Gray", RenderOperation::OT_TRIANGLE_LIST);
 
         int idx = 0;
 
@@ -216,7 +235,7 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
 
         newObject->end();
         free(normals); 
-    //}
+
     //restore mesh for future use
     memcpy(mesh->vertices, orig_vertices, sizeof(float) * 3 * mesh->nvertices);
     free(orig_vertices);
@@ -227,7 +246,6 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
     {
         // create ogre mesh from manualobject
         newMesh = newObject->convertToMesh(fullMeshName + ".mesh");
-        //newMesh->buildTangentVectors();
         mSceneMgr->destroyManualObject(newObject);
     }
     else
@@ -268,7 +286,6 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
         lib3ds_mesh_calculate_vertex_normals(mesh, normals);
 
         // create an ogre object for easy OgreMesh conversion
-        // Gray = default material
         // TODO: better default material
         newObject->begin("3DS/Gray", RenderOperation::OT_TRIANGLE_LIST);
 
@@ -555,8 +572,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
             m3dsBuildLog->logMessage("\n\n\n");
             
-            
-
+           
             _buildSceneFromNode(p->childs, newNode, fullName, _level+1, _show);
         }
     }
