@@ -9,6 +9,19 @@
 static int  log_level = LIB3DS_LOG_INFO;
 
 
+Matrix4 createMatrix4FromArray(float _mat[4][4])
+{
+    Matrix4 out;
+    for(int i=0 ; i<4 ; i++)
+        for(int j=0 ; j<4 ; j++)
+            out[i][j] = _mat[i][j];
+
+    return out;
+}
+
+
+
+
 Test3DSViewerApp::Test3DSViewerApp(void)
     :OgreApplication("3DS loader")
     ,mDummyCnt(0)
@@ -39,13 +52,13 @@ void Test3DSViewerApp::_build3dsModel()
  
     //m3dsFile =  lib3ds_file_open("../media/3ds/test3.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
+    ///m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
-    m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Kengresshus-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
+    m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/chienvert.3DS");
     if (!m3dsFile->nodes)
         lib3ds_file_create_nodes_for_meshes(m3dsFile);
@@ -54,10 +67,10 @@ void Test3DSViewerApp::_build3dsModel()
 
     mAABB = Ogre::AxisAlignedBox::BOX_NULL;
 
-    _createMeshesFrom3dsFile(m3dsFile);
-    _buildSceneFromNode(m3dsFile->nodes, modelNode, "/", 0, false);
+    /*_createMeshesFrom3dsFile(m3dsFile);
+    _buildSceneFromNode(m3dsFile->nodes, modelNode, "/", 0, false);*/
 
-    //_buildSubtree( m3dsFile->nodes, "/", modelNode);
+    _buildSubtree( m3dsFile->nodes, "/", modelNode);
 
 
 
@@ -352,11 +365,13 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                                            ,int _level
                                            ,bool _show)
 {
+    
     boost::format fullNameFmt("%s/%06d%s");
-    Lib3dsNode *p;
-    SceneNode *newNode;
-    for(p = _3dsNode ; p ; p=p->next)
+  
+    
+    for(Lib3dsNode *p = _3dsNode ; p ; p=p->next)
     {
+        SceneNode *newNode;
         std::stringstream spaces;
         for(int i=0 ; i<_level*4 ; ++i)
         {
@@ -381,16 +396,9 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
         m3dsBuildLog->logMessage(fmt.str());    
         
-        
-        Matrix4 baseMatrix;
-        for(int i=0 ; i<4 ; ++i)
-            for(int j=0 ; j<4 ; ++j)
-                baseMatrix[i][j] = p->matrix[j][i];
-        _logXformMatrix(baseMatrix, spaces, "node->base.matrix : ");
+        Matrix4 baseMatrix = createMatrix4FromArray(p->matrix);
+        _logXformMatrix(baseMatrix, spaces, "node->base.matrix : ", true);
     
-
-
-        
 
         if (p->type == LIB3DS_NODE_MESH_INSTANCE) 
         {
@@ -415,44 +423,6 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
             newNode = _parentNode->createChildSceneNode(fullName + " Node");
                  
-            //{
-            //    /*SceneNode *nodeCenter = newNode->createChildSceneNode(fullName + " NodeCenter");
-            //    Entity *nodeSphere = mSceneMgr->createEntity(fullName + "sphere", "axes.mesh");
-            //    nodeCenter->attachObject(nodeSphere);
-            //    float scale = 20.0 / nodeSphere->getBoundingBox().getSize().x;
-            //    nodeCenter->setScale(scale, scale, scale);*/
-
-            //    //if(_show && !StringUtil::match( std::string(p->name), ""))
-            //    //{
-            //    //    MovableTextPtr nodeLabel(new MovableText(fullName, std::string(p->name)));
-            //    //    nodeLabel->setTextAlignment(MovableText::H_CENTER, MovableText::V_BELOW);
-            //    //    nodeLabel->setCharacterHeight(7);
-            //    //    nodeLabel->setVisible(true);
-            //    //    nodeLabel->showOnTop(true);
-            //    //    //nodeLabel = newObject.ObjectNode->createChildSceneNode(name+"labelnode", Vector3(0, 120, 0));
-            //    //    nodeCenter->attachObject(&(*nodeLabel));
-            //    //    mNodeLabels[fullName] = nodeLabel;
-            //    //}
-            //}
-
-
-     
-            
-            //if(scl[0]<0)
-            //{
-            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_Y);
-            //    scl[0] = -scl[0];
-            //}
-            //if(scl[1]<0)
-            //{
-            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_Z);
-            //    scl[1] = -scl[1];
-            //}
-            //if(scl[2]<0)
-            //{
-            //    rot = rot * Quaternion(Radian(Math::PI / 2), Vector3::UNIT_X);
-            //    scl[2] = -scl[2];
-            //}
 
             {
                 Matrix4 nodeMatrix = newNode->_getFullTransform();
@@ -535,13 +505,9 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
             if (mesh && mesh->name)
             {
                 std::string meshName = mesh->name;
-                Matrix4 meshMatrix;
-
-                for(int i=0 ; i<4 ; ++i)
-                    for(int j=0 ; j<4 ; ++j)
-                        meshMatrix[i][j] = mesh->matrix[j][i];
                 
-                _logXformMatrix(meshMatrix, spaces, "mesh matrix : ");
+                Matrix4 meshMatrix = createMatrix4FromArray(mesh->matrix);
+                _logXformMatrix(meshMatrix, spaces, "mesh matrix : ", true);
 
                 MeshPtr meshToAdd = mCenteredMeshes[meshName];
 
@@ -580,7 +546,8 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
                                       ,const std::stringstream &_spaces
-                                      ,const std::string &_title)
+                                      ,const std::string &_title
+                                      ,bool _transpose)
 {
     m3dsBuildLog->logMessage("");
     m3dsBuildLog->logMessage(_spaces.str() + "    "+_title);
@@ -589,7 +556,10 @@ void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
     {
         boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
         matrixLineFmt % _spaces.str() % "    ";
-        matrixLineFmt % _matrix[i][0] % _matrix[i][1] % _matrix[i][2] % _matrix[i][3];
+        if(_transpose)
+            matrixLineFmt % _matrix[0][i] % _matrix[1][i] % _matrix[2][i] % _matrix[3][i];
+        else
+            matrixLineFmt % _matrix[i][0] % _matrix[i][1] % _matrix[i][2] % _matrix[i][3];
         m3dsBuildLog->logMessage(matrixLineFmt.str());
     }
     m3dsBuildLog->logMessage("");

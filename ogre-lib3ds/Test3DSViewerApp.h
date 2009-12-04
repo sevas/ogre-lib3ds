@@ -49,7 +49,10 @@ protected:
 
     void _logXformMatrix(const Matrix4&
                         ,const std::stringstream&
-                        ,const std::string &);
+                        ,const std::string &
+                        ,bool _transpose=false);
+
+   
 
 protected:
     FILE *mFile;    
