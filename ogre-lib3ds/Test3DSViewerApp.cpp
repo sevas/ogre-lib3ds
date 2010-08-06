@@ -52,14 +52,17 @@ void Test3DSViewerApp::_build3dsModel()
  
     //m3dsFile =  lib3ds_file_open("../media/3ds/test3.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
-    ///m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/monaco.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Kengresshus-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
-    m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/chienvert.3DS");
+
+    m3dsFile =  lib3ds_file_open("../media/3ds/ionic_temple.3ds");
+
     if (!m3dsFile->nodes)
         lib3ds_file_create_nodes_for_meshes(m3dsFile);
 
@@ -80,11 +83,11 @@ void Test3DSViewerApp::_build3dsModel()
     modelNode->scale(scale, scale, scale);
     modelNode->pitch(Degree(-90));
 
-    StaticGeometry *geom = mSceneMgr->createStaticGeometry("fucking shit");
-    geom->addSceneNode(modelNode);
-    geom->build();
-    geom->setVisible(true);
-    modelNode->setVisible(false);
+    //StaticGeometry *geom = mSceneMgr->createStaticGeometry("fucking shit");
+    //geom->addSceneNode(modelNode);
+    //geom->build();
+    //geom->setVisible(true);
+    //modelNode->setVisible(false);
 
 
     lib3ds_file_free(m3dsFile);
@@ -218,7 +221,7 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
         lib3ds_mesh_calculate_vertex_normals(mesh, normals);
         
         // copy everything to vertex buffers
-        newObject->begin("3DS/Gray", RenderOperation::OT_TRIANGLE_LIST);
+        newObject->begin("Shading/Phong", RenderOperation::OT_TRIANGLE_LIST);
 
         int idx = 0;
 
@@ -300,7 +303,7 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
 
         // create an ogre object for easy OgreMesh conversion
         // TODO: better default material
-        newObject->begin("3DS/Gray", RenderOperation::OT_TRIANGLE_LIST);
+        newObject->begin("Shading/Phong", RenderOperation::OT_TRIANGLE_LIST);
 
         int idx = 0;
         // foreach tri
