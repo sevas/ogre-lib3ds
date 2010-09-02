@@ -14,12 +14,7 @@
 #include "OgreApplication.h"
 
 
-    
-
-using namespace Ogre;
-
-class Test3DSViewerApp :
-    public OgreApplication
+class Test3DSViewerApp : public OgreApplication
 {
 public:
     Test3DSViewerApp(void);
@@ -59,16 +54,16 @@ protected:
     Lib3dsFile *m3dsFile;
     Lib3dsIo m3dsIo;
 
-    ManualObject *mObjectBuilder;
+    Ogre::ManualObject *mObjectBuilder;
 
-    std::map<std::string, MeshPtr> mMeshes;
-    std::list<MeshPtr> mMeshVect;
+    std::map<std::string, Ogre::MeshPtr> mMeshes;
+    std::list<Ogre::MeshPtr> mMeshVect;
 
-    Log *m3dsBuildLog;
+    Ogre::Log *m3dsBuildLog;
     int mDummyCnt, mNodeCnt;
 
     typedef boost::shared_ptr<MovableText> MovableTextPtr;
-    std::map<std::string, MeshPtr> mCenteredMeshes;
+    std::map<std::string, Ogre::MeshPtr> mCenteredMeshes;
     std::map<std::string, MovableTextPtr> mNodeLabels;
 
     Ogre::AxisAlignedBox mAABB;

@@ -18,10 +18,7 @@ Matrix4 createMatrix4FromArray(float _mat[4][4])
 
     return out;
 }
-
-
-
-
+//------------------------------------------------------------------------------
 Test3DSViewerApp::Test3DSViewerApp(void)
     :OgreApplication("3DS loader")
     ,mDummyCnt(0)
@@ -48,7 +45,7 @@ void Test3DSViewerApp::createScene()
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_build3dsModel()
 {
-    SceneNode *modelNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("3ds model");
+    Ogre::SceneNode *modelNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("3ds model");
  
     //m3dsFile =  lib3ds_file_open("../media/3ds/test3.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/indochine.3DS");
@@ -78,8 +75,8 @@ void Test3DSViewerApp::_build3dsModel()
 
 
 
-    Real width = mAABB.getSize()[0];
-    Real scale = 1000.0/width;
+    Ogre::Real width = mAABB.getSize()[0];
+    Ogre::Real scale = 1000.0/width;
     modelNode->scale(scale, scale, scale);
     modelNode->pitch(Degree(-90));
 
@@ -94,8 +91,11 @@ void Test3DSViewerApp::_build3dsModel()
  
 }
 //------------------------------------------------------------------------------
-void Test3DSViewerApp::_dumpNode(Log *_log, Lib3dsNode *_node
-                                , int _level, std::string _basename)
+void Test3DSViewerApp::_dumpNode(
+                                 Ogre::Log *_log
+                                 , Lib3dsNode *_node
+                                 , int _level
+                                 , std::string _basename)
 {
     boost::format fmt("%s [mesh : %s]");
     std::stringstream s;
@@ -123,7 +123,7 @@ void Test3DSViewerApp::_dumpNode(Log *_log, Lib3dsNode *_node
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_buildSubtree(Lib3dsNode *_node
                                     ,const std::string &_basename
-                                    ,SceneNode *_parentNode)
+                                    ,Ogre::SceneNode *_parentNode)
 {
     boost::format fullNameFmt("%s/%06d%s");
 
@@ -181,16 +181,17 @@ void Test3DSViewerApp::_buildSubtree(Lib3dsNode *_node
     }
 }
 //------------------------------------------------------------------------------
-MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
-                                                    , Lib3dsMeshInstanceNode *_node
-                                                    , const std::string &_basename)
+Ogre::MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(
+    Lib3dsMesh *_mesh
+    , Lib3dsMeshInstanceNode *_node
+    , const std::string &_basename)
 {
     boost::format fmt("%s -- %s");
     fmt % _basename % _mesh->name;
     std::string fullMeshName = fmt.str();
 
     m3dsBuildLog->logMessage(std::string("building new mesh : ") + fullMeshName+".mesh");
-    ManualObject *newObject = mSceneMgr->createManualObject(fullMeshName);
+    Ogre::ManualObject *newObject = mSceneMgr->createManualObject(fullMeshName);
     Lib3dsMesh *mesh = _mesh;
     Lib3dsMeshInstanceNode *node = _node;
 
@@ -203,59 +204,59 @@ MeshPtr Test3DSViewerApp::_convert3dsMeshToOgreMesh(Lib3dsMesh *_mesh
     
     // create translated ogre manualobject
 
-        float inv_matrix[4][4], M[4][4];
-        float tmp[3];
-        //int i;
+    float inv_matrix[4][4], M[4][4];
+    float tmp[3];
+    //int i;
 
-        lib3ds_matrix_copy(M, node->base.matrix);
-        lib3ds_matrix_translate(M, -node->pivot[0], -node->pivot[1], -node->pivot[2]);
-        lib3ds_matrix_copy(inv_matrix, mesh->matrix);
-        lib3ds_matrix_inv(inv_matrix);
-        lib3ds_matrix_mult(M, M, inv_matrix);
+    lib3ds_matrix_copy(M, node->base.matrix);
+    lib3ds_matrix_translate(M, -node->pivot[0], -node->pivot[1], -node->pivot[2]);
+    lib3ds_matrix_copy(inv_matrix, mesh->matrix);
+    lib3ds_matrix_inv(inv_matrix);
+    lib3ds_matrix_mult(M, M, inv_matrix);
 
-        for (int i = 0; i < mesh->nvertices; ++i) {
-            lib3ds_vector_transform(tmp, M, mesh->vertices[i]);
-            lib3ds_vector_copy(mesh->vertices[i], tmp);
-        }
-        float (*normals)[3] = (float(*)[3])malloc(sizeof(float) * 9 * mesh->nfaces);
-        lib3ds_mesh_calculate_vertex_normals(mesh, normals);
+    for (int i = 0; i < mesh->nvertices; ++i) 
+    {
+        lib3ds_vector_transform(tmp, M, mesh->vertices[i]);
+        lib3ds_vector_copy(mesh->vertices[i], tmp);
+    }
+    
+    float (*normals)[3] = (float(*)[3])malloc(sizeof(float) * 9 * mesh->nfaces);
+    lib3ds_mesh_calculate_vertex_normals(mesh, normals);
         
-        // copy everything to vertex buffers
-        newObject->begin("Shading/Phong", RenderOperation::OT_TRIANGLE_LIST);
+    // copy everything to vertex buffers
+    newObject->begin("Shading/Phong", RenderOperation::OT_TRIANGLE_LIST);
 
-        int idx = 0;
+    int idx = 0;
 
-        // foreach tri
-        for(int tri_idx = 0 ; tri_idx < mesh->nfaces ; ++tri_idx)
-        {
+    // foreach tri
+    for(int tri_idx = 0 ; tri_idx < mesh->nfaces ; ++tri_idx)
+    {
            
-            // foreach vertex in tri
-            for(int j=0 ; j<3 ; ++j)
-            {
-                Vector3 pos, norm;
-                Vector2 tc;
+        // foreach vertex in tri
+        for(int j=0 ; j<3 ; ++j)
+        {
+            Ogre::Vector3 pos, norm;
+            Ogre::Vector2 tc;
                    
-                pos = Vector3(mesh->vertices[mesh->faces[tri_idx].index[j]]);
-                newObject->position(pos);
+            pos = Ogre::Vector3(mesh->vertices[mesh->faces[tri_idx].index[j]]);
+            newObject->position(pos);
                                 
-                if(mesh->texcos)
-                    tc = Vector2(mesh->texcos[mesh->faces[tri_idx].index[j]]);
-                norm = Vector3(normals[idx]);
+            if(mesh->texcos)
+                tc = Ogre::Vector2(mesh->texcos[mesh->faces[tri_idx].index[j]]);
+            norm = Ogre::Vector3(normals[idx]);
 
+            newObject->normal(norm);
 
-                newObject->normal(norm);
-
-                newObject->index(idx++);
-            }
+            newObject->index(idx++);
         }
+    }
 
-        newObject->end();
-        free(normals); 
+    newObject->end();
+    free(normals); 
 
     //restore mesh for future use
     memcpy(mesh->vertices, orig_vertices, sizeof(float) * 3 * mesh->nvertices);
     free(orig_vertices);
-
     
     MeshPtr newMesh;
     if(idx)
@@ -276,7 +277,8 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
     for(int i=0 ; i<_3dsfile->nmeshes ; ++i)
     {
         Lib3dsMesh *mesh = _3dsfile->meshes[i];
-        ManualObject *newObject = mSceneMgr->createManualObject(boost::str(boost::format("%d_%s")% i % mesh->name));
+        Ogre::ManualObject *newObject = 
+            mSceneMgr->createManualObject(boost::str(boost::format("%d_%s")% i % mesh->name));
 
         m3dsBuildLog->logMessage(std::string("building new mesh : ") + newObject->getName());
 
@@ -303,7 +305,7 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
 
         // create an ogre object for easy OgreMesh conversion
         // TODO: better default material
-        newObject->begin("Shading/Phong", RenderOperation::OT_TRIANGLE_LIST);
+        newObject->begin("Shading/Phong", Ogre::RenderOperation::OT_TRIANGLE_LIST);
 
         int idx = 0;
         // foreach tri
@@ -312,19 +314,19 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
             // foreach vertex in tri
             for(int j=0 ; j<3 ; ++j)
             {
-                Vector3 pos, norm;
-                Vector2 tc;
+                Ogre::Vector3 pos, norm;
+                Ogre::Vector2 tc;
 
-                pos = Vector3(mesh->vertices[mesh->faces[tri_idx].index[j]]);
+                pos = Ogre::Vector3(mesh->vertices[mesh->faces[tri_idx].index[j]]);
                 newObject->position(pos);
 
                 if(mesh->texcos)
                 {
-                    tc = Vector2(mesh->texcos[mesh->faces[tri_idx].index[j]]);
+                    tc = Ogre::Vector2(mesh->texcos[mesh->faces[tri_idx].index[j]]);
                     newObject->textureCoord(tc);
                 }
 
-                norm = Vector3(normals[idx]);
+                norm = Ogre::Vector3(normals[idx]);
 
                 newObject->normal(norm);
                 newObject->index(idx++);
@@ -338,7 +340,7 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
         free(orig_vertices);
 
 
-        MeshPtr newMesh;
+        Ogre::MeshPtr newMesh;
         if(idx)
         {
             boost::format fmt("creating new Ogre::Mesh %s [%d vertices]");
@@ -362,27 +364,21 @@ void Test3DSViewerApp::_createMeshesFrom3dsFile(Lib3dsFile *_3dsfile)
     m3dsBuildLog->logMessage("----------------  building meshes ended");
 }
 //------------------------------------------------------------------------------
-void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
-                                           ,SceneNode *_parentNode
-                                           ,const std::string &_basename
-                                           ,int _level
-                                           ,bool _show)
+void Test3DSViewerApp::_buildSceneFromNode(
+    Lib3dsNode *_3dsNode
+    ,Ogre::SceneNode *_parentNode
+    ,const std::string &_basename
+    ,int _level
+    ,bool _show)
 {
     
     boost::format fullNameFmt("%s/%06d%s");
   
-    
     for(Lib3dsNode *p = _3dsNode ; p ; p=p->next)
     {
-        SceneNode *newNode;
-        std::stringstream spaces;
-        for(int i=0 ; i<_level*4 ; ++i)
-        {
-            if ((i%4) == 0)
-                spaces << ".";
-            else
-                spaces << " ";
-        }
+        Ogre::SceneNode *newNode;
+        std::stringstream spaces = _makeIndentSpaces(_level);
+
         boost::format fmt("%s (%d) \t %s \t [%s]");
         fmt % spaces.str() % p->node_id % p->name;
         switch(p->type)
@@ -399,7 +395,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
 
         m3dsBuildLog->logMessage(fmt.str());    
         
-        Matrix4 baseMatrix = createMatrix4FromArray(p->matrix);
+        Ogre::Matrix4 baseMatrix = createMatrix4FromArray(p->matrix);
         _logXformMatrix(baseMatrix, spaces, "node->base.matrix : ", true);
     
 
@@ -428,7 +424,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                  
 
             {
-                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                Ogre::Matrix4 nodeMatrix = newNode->_getFullTransform();
                 _logXformMatrix(nodeMatrix, spaces, "SceneNode before xform");
             
                 Matrix4 localXform(Matrix4::IDENTITY);
@@ -449,11 +445,11 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->scl : "
                     + StringConverter::toString(scl));
 
-                Matrix4 xform(Matrix4::IDENTITY);
+                Ogre::Matrix4 xform(Matrix4::IDENTITY);
                 xform.setScale(scl);
                 _logXformMatrix(xform, spaces, "mesh instance scale");
 
-                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                Ogre::Matrix4 nodeMatrix = newNode->_getFullTransform();
                 _logXformMatrix(nodeMatrix, spaces, "SceneNode after scale : ");
                 m3dsBuildLog->logMessage("");
             }
@@ -464,9 +460,9 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->rot : "
                                                       + StringConverter::toString(rot));
 
-                Matrix4 xform(rot);
+                Ogre::Matrix4 xform(rot);
                 _logXformMatrix(xform, spaces, "mesh instance rotation");
-                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                Ogre::Matrix4 nodeMatrix = newNode->_getFullTransform();
                 _logXformMatrix(nodeMatrix, spaces, "SceneNode after scale & rotate : ");
                 m3dsBuildLog->logMessage("");
             }
@@ -477,11 +473,11 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                 m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pos : "
                                                       + StringConverter::toString(pos));
 
-                Matrix4 xform(Matrix4::IDENTITY);
+                Ogre::Matrix4 xform(Matrix4::IDENTITY);
                 xform.makeTrans(pos);
                 _logXformMatrix(xform, spaces, "mesh instance translation");
 
-                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                Ogre::Matrix4 nodeMatrix = newNode->_getFullTransform();
                 _logXformMatrix(nodeMatrix, spaces, "SceneNode after translate");
                 m3dsBuildLog->logMessage("");
             }
@@ -497,7 +493,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
                     + StringConverter::toString(Vector3(-n->pivot[0]
                                                         ,-n->pivot[1]
                                                         ,-n->pivot[2])));
-                Matrix4 nodeMatrix = newNode->_getFullTransform();
+                Ogre::Matrix4 nodeMatrix = newNode->_getFullTransform();
                 _logXformMatrix(nodeMatrix, spaces, "SceneNode after pivot");
                 m3dsBuildLog->logMessage("");
             }
@@ -509,18 +505,21 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
             {
                 std::string meshName = mesh->name;
                 
-                Matrix4 meshMatrix = createMatrix4FromArray(mesh->matrix);
+                Ogre::Matrix4 meshMatrix = createMatrix4FromArray(mesh->matrix);
                 _logXformMatrix(meshMatrix, spaces, "mesh matrix : ", true);
 
-                MeshPtr meshToAdd = mCenteredMeshes[meshName];
+                Ogre::MeshPtr meshToAdd = mCenteredMeshes[meshName];
 
                 if(! meshToAdd.isNull())
                 {
                     if(1)//_show)
                     {
 
-                        Entity *ent = mSceneMgr->createEntity(fullName+" Ent"
-                                                            , mCenteredMeshes[meshName]->getName());
+                        Ogre::Entity *ent; 
+                        ent = mSceneMgr->createEntity(
+                            fullName+" Ent"
+                            , mCenteredMeshes[meshName]->getName());
+
                         newNode->attachObject(ent);
 
                         {
@@ -547,7 +546,7 @@ void Test3DSViewerApp::_buildSceneFromNode(Lib3dsNode *_3dsNode
     }
 }
 //------------------------------------------------------------------------------
-void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
+void Test3DSViewerApp::_logXformMatrix(const Ogre::Matrix4 &_matrix
                                       ,const std::stringstream &_spaces
                                       ,const std::string &_title
                                       ,bool _transpose)
@@ -568,6 +567,7 @@ void Test3DSViewerApp::_logXformMatrix(const Matrix4 &_matrix
     m3dsBuildLog->logMessage("");
 }
 //------------------------------------------------------------------------------
+// upper dupper special test case for one special model
 void Test3DSViewerApp::_buildRadiator()
 {
     mSceneMgr->setFlipCullingOnNegativeScale(false);
@@ -637,4 +637,17 @@ void Test3DSViewerApp::_buildRadiator()
     M = Matrix4::IDENTITY;
     M.makeTransform(box210Pos, box210Scl, box210Rot);
     boxMatrix2 = baseMatrix2 * M;
+}
+
+std::string Test3DSViewerApp::_makeIndentSpaces(int _level)
+{
+    std::stringstream spaces;
+    for(int i=0 ; i<_level*4 ; ++i)
+    {
+        if ((i%4) == 0)
+            spaces << ".";
+        else
+            spaces << " ";
+    }
+    return spaces;
 }
