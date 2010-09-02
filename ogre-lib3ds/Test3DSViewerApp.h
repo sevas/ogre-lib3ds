@@ -43,10 +43,11 @@ protected:
                             ,bool);
 
     void _logXformMatrix(const Matrix4&
-                        ,const std::stringstream&
+                        ,const std::string&
                         ,const std::string &
                         ,bool _transpose=false);
 
+    static std::string _makeIndentSpaces(int level);
    
 
 protected:

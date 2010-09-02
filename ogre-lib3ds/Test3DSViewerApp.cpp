@@ -9,9 +9,9 @@
 static int  log_level = LIB3DS_LOG_INFO;
 
 
-Matrix4 createMatrix4FromArray(float _mat[4][4])
+Ogre::Matrix4 createMatrix4FromArray(float _mat[4][4])
 {
-    Matrix4 out;
+    Ogre::Matrix4 out;
     for(int i=0 ; i<4 ; i++)
         for(int j=0 ; j<4 ; j++)
             out[i][j] = _mat[i][j];
@@ -53,12 +53,12 @@ void Test3DSViewerApp::_build3dsModel()
     //m3dsFile =  lib3ds_file_open("../media/3ds/amphimath_walls.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/lyon.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Kengresshus-visuelle.3DS");
-    //m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
+    m3dsFile =  lib3ds_file_open("../media/3ds/casa_de_musica-visuelle.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/Modern-home-interior1.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/test.3DS");
     //m3dsFile =  lib3ds_file_open("../media/3ds/chienvert.3DS");
 
-    m3dsFile =  lib3ds_file_open("../media/3ds/ionic_temple.3ds");
+    //m3dsFile =  lib3ds_file_open("../media/3ds/ionic_temple.3ds");
 
     if (!m3dsFile->nodes)
         lib3ds_file_create_nodes_for_meshes(m3dsFile);
@@ -377,10 +377,10 @@ void Test3DSViewerApp::_buildSceneFromNode(
     for(Lib3dsNode *p = _3dsNode ; p ; p=p->next)
     {
         Ogre::SceneNode *newNode;
-        std::stringstream spaces = _makeIndentSpaces(_level);
 
+        std::string spaces = _makeIndentSpaces(_level);
         boost::format fmt("%s (%d) \t %s \t [%s]");
-        fmt % spaces.str() % p->node_id % p->name;
+        fmt % spaces % p->node_id % p->name;
         switch(p->type)
         {
         case LIB3DS_NODE_AMBIENT_COLOR:    fmt % "Ambient Color"; break;
@@ -442,7 +442,7 @@ void Test3DSViewerApp::_buildSceneFromNode(
             newNode->scale(scl);
 
             {
-                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->scl : "
+                m3dsBuildLog->logMessage(spaces + "    3dsMeshNode->scl : "
                     + StringConverter::toString(scl));
 
                 Ogre::Matrix4 xform(Matrix4::IDENTITY);
@@ -457,7 +457,7 @@ void Test3DSViewerApp::_buildSceneFromNode(
             newNode->rotate(rot);
 
             {
-                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->rot : "
+                m3dsBuildLog->logMessage(spaces + "    3dsMeshNode->rot : "
                                                       + StringConverter::toString(rot));
 
                 Ogre::Matrix4 xform(rot);
@@ -470,7 +470,7 @@ void Test3DSViewerApp::_buildSceneFromNode(
             newNode->translate(pos);
             
             {
-                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pos : "
+                m3dsBuildLog->logMessage(spaces + "    3dsMeshNode->pos : "
                                                       + StringConverter::toString(pos));
 
                 Ogre::Matrix4 xform(Matrix4::IDENTITY);
@@ -482,14 +482,18 @@ void Test3DSViewerApp::_buildSceneFromNode(
                 m3dsBuildLog->logMessage("");
             }
 
-            newNode = newNode->createChildSceneNode(fullName+"pivot node"
-                                                    , Vector3(-n->pivot[0]
-                                                            , -n->pivot[1]
-                                                            , -n->pivot[2]));
-            newNode->setVisible(!(bool)n->hide);
+            newNode = newNode->createChildSceneNode(
+                fullName+"pivot node"
+                , Vector3(-n->pivot[0]
+                , -n->pivot[1]
+                , -n->pivot[2]));
+
+            bool isVisible = (n->hide==0) ? false : true;
+
+            newNode->setVisible(isVisible);
             {
                 // log node xforms
-                m3dsBuildLog->logMessage(spaces.str() + "    3dsMeshNode->pivot : "
+                m3dsBuildLog->logMessage(spaces + "    3dsMeshNode->pivot : "
                     + StringConverter::toString(Vector3(-n->pivot[0]
                                                         ,-n->pivot[1]
                                                         ,-n->pivot[2])));
@@ -547,17 +551,17 @@ void Test3DSViewerApp::_buildSceneFromNode(
 }
 //------------------------------------------------------------------------------
 void Test3DSViewerApp::_logXformMatrix(const Ogre::Matrix4 &_matrix
-                                      ,const std::stringstream &_spaces
+                                      ,const std::string &_spaces
                                       ,const std::string &_title
                                       ,bool _transpose)
 {
     m3dsBuildLog->logMessage("");
-    m3dsBuildLog->logMessage(_spaces.str() + "    "+_title);
+    m3dsBuildLog->logMessage(_spaces + "    "+_title);
 
     for(int i=0 ; i<4 ; ++i)
     {
         boost::format matrixLineFmt("%s%s %+.2f   %+.2f   %+.2f   %+.2f");
-        matrixLineFmt % _spaces.str() % "    ";
+        matrixLineFmt % _spaces% "    ";
         if(_transpose)
             matrixLineFmt % _matrix[0][i] % _matrix[1][i] % _matrix[2][i] % _matrix[3][i];
         else
@@ -649,5 +653,5 @@ std::string Test3DSViewerApp::_makeIndentSpaces(int _level)
         else
             spaces << " ";
     }
-    return spaces;
+    return spaces.str();
 }
